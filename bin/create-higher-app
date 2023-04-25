@@ -2,6 +2,8 @@
 
 const { execSync, exec } = require("child_process");
 const readline = require("readline");
+const path = require("path");
+const fs = require("fs");
 
 // Create a readline interface to interact with the user via the console
 const rl = readline.createInterface({
@@ -42,6 +44,26 @@ rl.question(
         try {
           exec(`cd ${repoName} && ${pm} install`).stdout.pipe(process.stdout);
           console.log("Setup completed successfully!");
+        } catch (error) {
+          console.error(error);
+        } finally {
+          rl.close();
+        }
+
+        try {
+          const projectPath = path.join(process.cwd(), repoName);
+          execSync(`cd ${projectPath} && ${pm} install`);
+          console.log("Setup completed successfully!");
+
+          // Change the name of the project in package.json to match the repository name
+          const packageJsonPath = path.join(projectPath, "package.json");
+          const packageJson = require(packageJsonPath);
+          packageJson.name = repoName;
+          fs.writeFileSync(
+            packageJsonPath,
+            JSON.stringify(packageJson, null, 2)
+          );
+          console.log(`Updated "name" field in package.json to "${repoName}".`);
         } catch (error) {
           console.error(error);
         } finally {
