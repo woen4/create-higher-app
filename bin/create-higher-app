@@ -1,0 +1,53 @@
+#!/usr/bin/env node
+
+const { execSync, exec } = require("child_process");
+const readline = require("readline");
+
+// Create a readline interface to interact with the user via the console
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
+
+// Ask the user for the name of the repository to clone
+rl.question(
+  "Let's create your Higher project, what is the repository name? ",
+  (repoName) => {
+    // URL of the repository to be cloned
+    const repoUrl = `https://github.com/woen4/higher-boilerplate.git`;
+
+    // Ask the user which package manager to use
+    rl.question(
+      "Which package manager do you want to use (npm, yarn or pnpm)? ",
+      (pm) => {
+        if (pm !== "npm" && pm !== "yarn" && pm !== "pnpm") {
+          console.error(
+            'Invalid package manager. Use "npm", "yarn" or "pnpm".'
+          );
+          rl.close();
+          return;
+        }
+
+        // Clone the repository
+        try {
+          execSync(`git clone ${repoUrl} ${repoName}`);
+          console.log("Repository cloned successfully.");
+        } catch (error) {
+          console.error(error);
+          rl.close();
+          return;
+        }
+
+        // Set up the chosen package manager
+        try {
+          exec(`cd ${repoName} && ${pm} install`).stdout.pipe(process.stdout);
+          console.log("Setup completed successfully!");
+        } catch (error) {
+          console.error(error);
+        } finally {
+          rl.close();
+        }
+      }
+    );
+  }
+);
